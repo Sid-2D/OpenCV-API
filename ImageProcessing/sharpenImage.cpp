@@ -30,21 +30,22 @@ void sharpen(const Mat &image) {
 void sharpenUsingKernel(const Mat &image) {
 	Mat result, kernel(3, 3, CV_32F, Scalar(0));
 	kernel.at<float>(1, 1) = 5.0;
-	kernel.at<float>(0, 1) = 2.0;
+	kernel.at<float>(0, 1) = -1.0;
 	kernel.at<float>(2, 1) = -1.0;
 	kernel.at<float>(1, 0) = -1.0;
 	kernel.at<float>(1, 2) = -1.0;
 	filter2D(image, result, image.depth(), kernel);
 	namedWindow("Sharpened Image", CV_WINDOW_AUTOSIZE);
 	imshow("Sharpened Image", result);
+	imwrite("C:/OCR/OpenCVApps/Media/tmbSharpened.jpg", result);
 }
 
 int main() {
 	Mat image, gray;
-	image = imread("C:/OCR/Media/img.jpg");
+	image = imread("C:/OCR/OpenCVApps/Media/tmb1.jpg");
 	gray.create(image.rows, image.cols, CV_8UC1);
 	cvtColor(image, gray, CV_BGR2GRAY);
-	resize(gray, gray, Size(), 0.5, 0.4, INTER_LINEAR);
+	resize(gray, gray, Size(), 0.4, 0.3, INTER_LINEAR);
 	namedWindow("Original Image", CV_WINDOW_AUTOSIZE);
 	imshow("Original Image", gray);
 	sharpenUsingKernel(gray);
