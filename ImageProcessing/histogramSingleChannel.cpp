@@ -45,8 +45,16 @@ class Histogram1D {
 int main() {
 	Mat image = imread("C:/OCR/OpenCVApps/Media/tmbSharpened.jpg", 0);
 	Histogram1D h;
+	MatND histo= h.getHistogram(image);
+	for (int i = 0; i < 256; i++) {
+		printf("Value %d = %f\n", i, histo.at<float>(i));
+	}
 	namedWindow("Histogram");
 	imshow("Histogram", h.getHistogramImage(image));
+	Mat thresholded;
+	threshold(image, thresholded, 100, 255, THRESH_BINARY);
+	namedWindow("Thresholded");
+	imshow("Thresholded", thresholded);
 	waitKey(0);
 	return 0;
 }
