@@ -3,6 +3,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace cv;
@@ -40,10 +41,46 @@ class Histogram1D {
 			}
 			return histImg;
 		}
+		Mat stretch(const Mat &image, int minValue = 0) {
+			MatND hist = getHistogram(image);
+			int imin;
+			cout << "\nStarting Stretch:\n";
+			cout << hist.at<float>(imin) << endl;
+			for (imin = 0; imin < histSize[0]; imin++) {
+				cout << hist.at<float>(imin) << endl;
+				if (hist.at<float>(imin) > minValue) {
+					break;
+				}
+			}
+			cout << "imin: " << imin << endl;
+			int imax;
+			for (imax = histSize[0] - 1; imax >= 0; imax--) {
+				if (hist.at<float>(imax) > minValue) {
+					break;
+				}
+			}
+			cout << "imax: " << imax << endl;
+			int dim(256);
+			Mat lookup(1, &dim, CV_8U);
+			for (int i = 0; i < 256; i++) {
+				if (i < imin) {
+					lookup.at<uchar>(i) = 0;
+				} else if (i > imax) {
+					lookup.at<uchar>(i) = 255; 
+				} else {
+					lookup.at<uchar>(i) = static_cast<uchar>(255.0 * (i - imin) / (imax - imin) + 0.5);
+				}
+			}
+			Mat result;
+			LUT(image, lookup, result);
+			return result;
+		}
 };
 
 int main() {
 	Mat image = imread("C:/OCR/OpenCVApps/Media/tmbSharpened.jpg", 0);
+	namedWindow("Original");
+	imshow("Original", image);
 	Histogram1D h;
 	MatND histo= h.getHistogram(image);
 	for (int i = 0; i < 256; i++) {
@@ -51,10 +88,12 @@ int main() {
 	}
 	namedWindow("Histogram");
 	imshow("Histogram", h.getHistogramImage(image));
+	// Thresholding
 	Mat thresholded;
 	threshold(image, thresholded, 100, 255, THRESH_BINARY);
-	namedWindow("Thresholded");
-	imshow("Thresholded", thresholded);
+	// Stretching
+	namedWindow("Stretched");
+	imshow("Stretched", h.stretch(image, 5000));
 	waitKey(0);
 	return 0;
 }
