@@ -82,18 +82,17 @@ int main() {
 	namedWindow("Original");
 	imshow("Original", image);
 	Histogram1D h;
-	MatND histo= h.getHistogram(image);
-	for (int i = 0; i < 256; i++) {
-		printf("Value %d = %f\n", i, histo.at<float>(i));
-	}
 	namedWindow("Histogram");
 	imshow("Histogram", h.getHistogramImage(image));
 	// Thresholding
 	Mat thresholded;
 	threshold(image, thresholded, 100, 255, THRESH_BINARY);
 	// Stretching
-	namedWindow("Stretched");
-	imshow("Stretched", h.stretch(image, 5000));
+	MatND histoStretched = h.getHistogramImage(h.stretch(image, 5000));
+	namedWindow("Stretched Histogram");
+	imshow("Stretched Histogram", histoStretched);
+	namedWindow("Stretched Image");
+	imshow("Stretched Image", h.stretch(image, 100));
 	waitKey(0);
 	return 0;
 }
