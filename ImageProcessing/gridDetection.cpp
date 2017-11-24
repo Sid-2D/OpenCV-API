@@ -1,9 +1,11 @@
 // Detects a 2D grid in an image
+// Referred heavily from: http://aishack.in/tutorials/sudoku-grabber-opencv-detection/
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <vector>
+#include <iostream>
 
 using namespace std;
 using namespace cv;
@@ -70,8 +72,8 @@ void mergeRelatedLines(vector<Vec2f> &lines, Mat &img) {
 }
 
 int main() {
-	Mat image = imread("C:/OCR/Media/tmbSharpened.jpg", 0);
-	Mat original = imread("C:/OCR/Media/tmbSharpened.jpg", 0);
+	Mat image = imread("/home/sid/Desktop/OpenCV-API/Media/tmbSharpened.jpg", 0);
+	Mat original = imread("/home/sid/Desktop/OpenCV-API/Media/tmbSharpened.jpg", 0);
 	Mat outerBox = Mat(image.size(), CV_8UC1);
 	GaussianBlur(image, image, Size(11, 11), 0);
 	adaptiveThreshold(image, outerBox, 255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 2);
@@ -113,8 +115,8 @@ int main() {
 		drawLine(*it, outerBox, CV_RGB(0, 0, 128));
 		++it;
 	}
- 	namedWindow("Operation");
-	imshow("Operation", outerBox);
+ 	// namedWindow("HoughLines OuterBox");
+	// imshow("HoughLines OuterBox", outerBox);
 	// Finding extreme lines
 	Vec2f topEdge = Vec2f(1000, 1000);
 	double topYIntercept = 100000, topXIntercept = 0;
@@ -156,34 +158,36 @@ int main() {
 	drawLine(bottomEdge, original, CV_RGB(0, 0, 0));
 	drawLine(leftEdge, original, CV_RGB(0, 0, 0));
 	drawLine(rightEdge, original, CV_RGB(0, 0, 0));
-	namedWindow("Original with lines");
-	imshow("Original with lines", original);
+	// namedWindow("Original with lines");
+	// imshow("Original with lines", original);
 	// Calculate Line Intersections
 	Point left1, left2, right1, right2, bottom1, bottom2, top1, top2;
 	int height = outerBox.size().height;
 	int width = outerBox.size().width;
-	if (leftEdge[1] != 0) {
-		left1.x = 0;
-		left1.y = leftEdge[0] / sin(leftEdge[1]);
-		left2.x = width;
-		left2.y = -left2.x / tan(leftEdge[1]) + left1.y;
-	} else {
+	cout << "rightedge0: " << rightEdge[0] << endl;
+	cout << "rightedge1: " << rightEdge[1] << endl;
+	// if (leftEdge[1] != 0) {
+		// left1.x = 0;
+		// left1.y = leftEdge[0] / sin(leftEdge[1]);
+		// left2.x = width;
+		// left2.y = -left2.x / tan(leftEdge[1]) + left1.y;
+	//} else {
 		left1.y = 0;
 		left1.x = leftEdge[0] / cos(leftEdge[1]);
 		left2.y = height;
 		left2.x = left1.x - height * tan(leftEdge[1]);
-	}
-	if (rightEdge[1] != 0) {
-		right1.x = 0;
-		right1.y = rightEdge[0] / sin(rightEdge[1]);
-		right2.x = width;
-		right2.y = -right2.x / tan(rightEdge[1]) + right1.y; 
-	} else {
+	// }
+	// if (rightEdge[1] != 0) {
+		// right1.x = 0;
+		// right1.y = rightEdge[0] / sin(rightEdge[1]);
+		// right2.x = width;
+		// right2.y = -right2.x / tan(rightEdge[1]) + right1.y; 
+	// } else {
 		right1.y = 0;
-		right1.x = rightEdge[0] / sin(rightEdge[1]);
+		right1.x = rightEdge[0] / cos(rightEdge[1]);
 		right2.y = height;
-		right2.x = right1.x = height * tan(rightEdge[1]);	
-	}
+		right2.x = right1.x - height * tan(rightEdge[1]);
+	// }
 	bottom1.x = 0;
 	bottom1.y = bottomEdge[0] / sin(bottomEdge[1]);
 	bottom2.x = width;
@@ -192,58 +196,96 @@ int main() {
 	top1.y = topEdge[0] / sin(topEdge[1]);
 	top2.x = width;
 	top2.y = -top2.x / tan(topEdge[1]) + top1.y;
-	// Find intersection of lines
-	double leftA = left2.y - left1.y;
-	double leftB = left1.x - left2.x;
-	double leftC = leftA * left1.x + leftB * left1.y;
-	double rightA = right2.y - right1.y;
-	double rightB = right1.x - right2.x;
-	double rightC = rightA * right1.x + rightB * right1.y;
-	double topA = top2.y - top1.y;
-	double topB = top1.x - top2.x;
-	double topC = topA * top1.x + topB * top1.y;
-	double bottomA = bottom2.y - bottom1.y;
-	double bottomB = bottom1.x - bottom2.x;
-	double bottomC = bottomA * bottom1.x + bottomB * bottom1.y;
-	// Intersection of left and top
-	double detTopLeft = leftA * topB - leftB * topA;
-	CvPoint ptTopLeft = cvPoint((topB * leftC - leftB * topC) / detTopLeft, (leftA * topC - topA * leftC) / detTopLeft);
-	// Intersection of top and right
-	double detTopRight = rightA * topB - rightB * topA; 
-	CvPoint ptTopRight = cvPoint((topB * leftC - leftB * topC) / detTopLeft, (leftA * topC - topA * leftC) / detTopLeft);
-	// Intersection of right and bottom     
-	double detBottomRight = rightA*bottomB - rightB*bottomA;
-	CvPoint ptBottomRight = cvPoint((bottomB * rightC - rightB * bottomC) / detBottomRight, (rightA * bottomC - bottomA * rightC) / detBottomRight);
-	// Intersection of bottom and left     
-	double detBottomLeft = leftA*bottomB-leftB * bottomA;
-	CvPoint ptBottomLeft = cvPoint((bottomB * leftC - leftB * bottomC) / detBottomLeft, (leftA * bottomC - bottomA * leftC) / detBottomLeft);
-	int maxLength = (ptBottomLeft.x - ptBottomRight.x) * (ptBottomLeft.x - ptBottomRight.x) + (ptBottomLeft.y - ptBottomRight.y) * (ptBottomLeft.y - ptBottomRight.y);     
-	int temp = (ptTopRight.x - ptBottomRight.x) * (ptTopRight.x - ptBottomRight.x) + (ptTopRight.y - ptBottomRight.y) * (ptTopRight.y - ptBottomRight.y);     
-	if (temp>maxLength) {
-		maxLength = temp;
-	}
-	temp = (ptTopRight.x - ptTopLeft.x) * (ptTopRight.x - ptTopLeft.x) + (ptTopRight.y - ptTopLeft.y) * (ptTopRight.y - ptTopLeft.y);
-	if (temp>maxLength) { 
-		maxLength = temp;
-	}
-	temp = (ptBottomLeft.x - ptTopLeft.x) * (ptBottomLeft.x - ptTopLeft.x) + (ptBottomLeft.y - ptTopLeft.y) * (ptBottomLeft.y - ptTopLeft.y);
-	if (temp>maxLength) { 
-		maxLength = temp;
-	}
-	maxLength = sqrt((double)maxLength);
+	// Display above points
+	cout << "Height: " << height << endl;
+	cout << "Width: " << width << endl;
+	cout << "Left1 x:" << left1.x << endl;
+	cout << "Left1 y:" << left1.y << endl;
+	cout << "Left2 x:" << left2.x << endl;
+	cout << "Left2 y:" << left2.y << endl;
+	cout << "Right1 x:" << right1.x << endl;
+	cout << "Right1 y:" << right1.y << endl;
+	cout << "Right2 x:" << right2.x << endl;
+	cout << "Right2 y:" << right2.y << endl;
+	circle(original, left1, 50, CV_RGB(0, 0, 255));
+	circle(original, left2, 50, CV_RGB(0, 0, 255));
+	circle(original, right1, 50, CV_RGB(0, 0, 255));
+	circle(original, right2, 50, CV_RGB(0, 0, 255));
+	circle(original, top1, 50, CV_RGB(0, 0, 255));
+	circle(original, top2, 50, CV_RGB(0, 0, 255));
+	circle(original, bottom1, 50, CV_RGB(0, 0, 255));
+	circle(original, bottom2, 50, CV_RGB(0, 0, 255));
+	Mat resized;
+	resize(original, resized, Size(), 0.5, 0.4, CV_INTER_LINEAR);
+	namedWindow("Points");
+	imshow("Points", resized);
+
+    // Next, we find the intersection of  these four lines
+    double leftA = left2.y-left1.y;
+    double leftB = left1.x-left2.x;
+
+    double leftC = leftA*left1.x + leftB*left1.y;
+
+    double rightA = right2.y-right1.y;
+    double rightB = right1.x-right2.x;
+
+    double rightC = rightA*right1.x + rightB*right1.y;
+
+    double topA = top2.y-top1.y;
+    double topB = top1.x-top2.x;
+
+    double topC = topA*top1.x + topB*top1.y;
+
+    double bottomA = bottom2.y-bottom1.y;
+    double bottomB = bottom1.x-bottom2.x;
+
+    double bottomC = bottomA*bottom1.x + bottomB*bottom1.y;
+
+    // Intersection of left and top
+    double detTopLeft = leftA*topB - leftB*topA;
+
+    CvPoint ptTopLeft = cvPoint((topB*leftC - leftB*topC)/detTopLeft, (leftA*topC - topA*leftC)/detTopLeft);
+
+    // Intersection of top and right
+    double detTopRight = rightA*topB - rightB*topA;
+
+    CvPoint ptTopRight = cvPoint((topB*rightC-rightB*topC)/detTopRight, (rightA*topC-topA*rightC)/detTopRight);
+
+    // Intersection of right and bottom
+    double detBottomRight = rightA*bottomB - rightB*bottomA;
+    CvPoint ptBottomRight = cvPoint((bottomB*rightC-rightB*bottomC)/detBottomRight, (rightA*bottomC-bottomA*rightC)/detBottomRight);// Intersection of bottom and left
+    double detBottomLeft = leftA*bottomB-leftB*bottomA;
+    CvPoint ptBottomLeft = cvPoint((bottomB*leftC-leftB*bottomC)/detBottomLeft, (leftA*bottomC-bottomA*leftC)/detBottomLeft);
+
+	int maxLength = (ptBottomLeft.x-ptBottomRight.x)*(ptBottomLeft.x-ptBottomRight.x) + (ptBottomLeft.y-ptBottomRight.y)*(ptBottomLeft.y-ptBottomRight.y);
+    int temp = (ptTopRight.x-ptBottomRight.x)*(ptTopRight.x-ptBottomRight.x) + (ptTopRight.y-ptBottomRight.y)*(ptTopRight.y-ptBottomRight.y);
+
+    if(temp>maxLength) maxLength = temp;
+
+    temp = (ptTopRight.x-ptTopLeft.x)*(ptTopRight.x-ptTopLeft.x) + (ptTopRight.y-ptTopLeft.y)*(ptTopRight.y-ptTopLeft.y);
+
+    if(temp>maxLength) maxLength = temp;
+
+    temp = (ptBottomLeft.x-ptTopLeft.x)*(ptBottomLeft.x-ptTopLeft.x) + (ptBottomLeft.y-ptTopLeft.y)*(ptBottomLeft.y-ptTopLeft.y);
+
+    if(temp>maxLength) maxLength = temp;
+
+    maxLength = sqrt((double)maxLength);
+
 	Point2f src[4], dst[4];
-	src[0] = ptTopLeft;
-	dst[0] = Point2f(0, 0);
-	src[1] = ptTopRight;
-	dst[1] = Point2f(maxLength - 1, 0);
-	src[2] = ptBottomRight;
-	dst[2] = Point2f(maxLength - 1, maxLength - 1);
-	src[3] = ptBottomLeft;
-	dst[3] = Point2f(0, maxLength - 1);
-	Mat undistorted = Mat(Size(maxLength, maxLength), CV_8UC1); 
-	warpPerspective(original, undistorted, getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
+	src[0] = ptTopLeft;            dst[0] = Point2f(0,0);
+	src[1] = ptTopRight;        dst[1] = Point2f(maxLength-1, 0);
+	src[2] = ptBottomRight;        dst[2] = Point2f(maxLength-1, maxLength-1);
+	src[3] = ptBottomLeft;        dst[3] = Point2f(0, maxLength-1);
+
+	Mat undistorted = Mat(Size(maxLength, maxLength), CV_8UC1);
+	cv::warpPerspective(original, undistorted, cv::getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
+
+	resize(undistorted, resized, Size(), 0.4, 0.28, CV_INTER_LINEAR);
+
 	namedWindow("Image Cut");
-	imshow("Image Cut", undistorted);
+	imshow("Image Cut", resized);
+
 	waitKey(0);
 	return 0;
 }
