@@ -76,10 +76,26 @@ int main() {
 	Mat original = imread("/home/sid/Desktop/OpenCV-API/Media/tmbSharpened.jpg", 0);
 	Mat outerBox = Mat(image.size(), CV_8UC1);
 	GaussianBlur(image, image, Size(11, 11), 0);
+	// namedWindow("GaussianBlur");
+	// imshow("GaussianBlur", image);
+	// waitKey(0);
+	// return 0;
 	adaptiveThreshold(image, outerBox, 255, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 2);
+	// namedWindow("adaptiveThreshold");
+	// imshow("adaptiveThreshold", outerBox);
+	// waitKey(0);
+	// return 0;
 	bitwise_not(outerBox, outerBox);
+	// namedWindow("bitwise_not");
+	// imshow("bitwise_not", outerBox);
+	// waitKey(0);
+	// return 0;
 	Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0); 
 	dilate(outerBox, outerBox, kernel);
+	// namedWindow("Dilate");
+	// imshow("Dilate", outerBox);
+	// waitKey(0);
+	// return 0;
 	// Biggest blob
 	int count = 0;
 	int max = -1;
@@ -97,6 +113,10 @@ int main() {
 		}
 	}
 	floodFill(outerBox, maxPt, CV_RGB(255, 255, 255));
+	// namedWindow("floodFill");
+	// imshow("floodFill", outerBox);
+	// waitKey(0);
+	// return 0;
 	for (int i = 0; i < outerBox.size().height; i++) {
 		uchar *row = outerBox.ptr(i);
 		for (int j = 0; j < outerBox.size().width; j++) {
@@ -105,18 +125,30 @@ int main() {
 			}
 		}
 	}
+	// namedWindow("areaOuterBox");
+	// imshow("areaOuterBox", outerBox);
+	// waitKey(0);
+	// return 0;
 	erode(outerBox, outerBox, kernel);
+	// namedWindow("erode");
+	// imshow("erode", outerBox);
+	// waitKey(0);
+	// return 0;
 	// Hough Lines and merge
 	vector<Vec2f> lines;
-	HoughLines(outerBox, lines, 1, CV_PI/180, 200, 0, 0);
+	HoughLines(outerBox, lines, 1, CV_PI/180, 330);
 	mergeRelatedLines(lines, outerBox);
 	vector<Vec2f>::const_iterator it = lines.begin();
 	while (it != lines.end()) {
 		drawLine(*it, outerBox, CV_RGB(0, 0, 128));
 		++it;
 	}
- 	// namedWindow("HoughLines OuterBox");
-	// imshow("HoughLines OuterBox", outerBox);
+	Mat resized;
+	// resize(outerBox, resized, Size(), 0.5, 0.5, CV_INTER_LINEAR);
+ // 	namedWindow("HoughLines OuterBox");
+	// imshow("HoughLines OuterBox", resized);
+	// waitKey(0);
+	// return 0;
 	// Finding extreme lines
 	Vec2f topEdge = Vec2f(1000, 1000);
 	double topYIntercept = 100000, topXIntercept = 0;
@@ -158,8 +190,8 @@ int main() {
 	drawLine(bottomEdge, original, CV_RGB(0, 0, 0));
 	drawLine(leftEdge, original, CV_RGB(0, 0, 0));
 	drawLine(rightEdge, original, CV_RGB(0, 0, 0));
-	// namedWindow("Original with lines");
-	// imshow("Original with lines", original);
+	namedWindow("Original with lines");
+	imshow("Original with lines", original);
 	// Calculate Line Intersections
 	Point left1, left2, right1, right2, bottom1, bottom2, top1, top2;
 	int height = outerBox.size().height;
@@ -215,7 +247,7 @@ int main() {
 	circle(original, top2, 50, CV_RGB(0, 0, 255));
 	circle(original, bottom1, 50, CV_RGB(0, 0, 255));
 	circle(original, bottom2, 50, CV_RGB(0, 0, 255));
-	Mat resized;
+	// Mat resized;
 	resize(original, resized, Size(), 0.5, 0.4, CV_INTER_LINEAR);
 	namedWindow("Points");
 	imshow("Points", resized);
@@ -281,10 +313,12 @@ int main() {
 	Mat undistorted = Mat(Size(maxLength, maxLength), CV_8UC1);
 	cv::warpPerspective(original, undistorted, cv::getPerspectiveTransform(src, dst), Size(maxLength, maxLength));
 
-	resize(undistorted, resized, Size(), 0.4, 0.28, CV_INTER_LINEAR);
+	resize(undistorted, resized, Size(), 0.5, 0.28, CV_INTER_LINEAR);
 
 	namedWindow("Image Cut");
 	imshow("Image Cut", resized);
+
+	imwrite("../Media/grid.jpg", undistorted);
 
 	waitKey(0);
 	return 0;

@@ -4,6 +4,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
+#include <cstdio>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -33,9 +35,11 @@ int main() {
 		numbers.push_back(Mat(scaled, rect));
 	}
 	for (int i = 0; i < numbers.size(); i++) {
-		namedWindow("Numbers", CV_WINDOW_AUTOSIZE);
-		imshow("Numbers", numbers[i]);
-		waitKey(0);
+		// namedWindow("Numbers", CV_WINDOW_AUTOSIZE);
+		// imshow("Numbers", numbers[i]);
+		char name[10];
+		sprintf(name, "../Media/Numbers/%d.jpg", i);
+		imwrite(name, numbers[i]);
 	}
 	return 0;
 }
